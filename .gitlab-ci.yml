@@ -39,7 +39,7 @@ docker_build_and_run:
     - docker build -f Dockerfile -t "$IMAGE_TAG" .
     - echo "Running container as a smoke test..."
     - CONTAINER_ID=$(docker run -d "$IMAGE_TAG")
-    - echo "Container ID: $CONTAINER_ID"
+    - 'echo "Container ID: $CONTAINER_ID"'
     - docker ps -a
     - docker logs "$CONTAINER_ID" || true
     - docker rm -f "$CONTAINER_ID" || true
