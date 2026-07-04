@@ -37,12 +37,10 @@ docker_build_and_run:
   script:
     - echo "Building image from dockerfile..."
     - docker build -f Dockerfile -t "$IMAGE_TAG" .
-    - echo "Running container as a smoke test..."
-    - CONTAINER_ID=$(docker run -d "$IMAGE_TAG")
-    - 'echo "Container ID: $CONTAINER_ID"'
-    - docker ps -a
-    - docker logs "$CONTAINER_ID" || true
-    - docker rm -f "$CONTAINER_ID" || true
+    - echo "Running container for Delft..."
+    - docker run --rm "$IMAGE_TAG"
+    - echo "Running container for Saratoga..."
+    - docker run --rm "$IMAGE_TAG" --saratoga
   rules:
     - if: $CI_COMMIT_BRANCH
       exists:
