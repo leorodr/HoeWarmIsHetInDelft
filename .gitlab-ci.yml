@@ -35,26 +35,41 @@ docker_build_and_run:
     DOCKER_TLS_CERTDIR: ""
     IMAGE_TAG: "hoewarmishetindelft-ci:$CI_COMMIT_SHORT_SHA"
   script:
-    - echo "Building image from dockerfile..."
-    - docker build -f Dockerfile -t "$IMAGE_TAG" .
+    - |
+      # function to run a container for a given target and capture its output
+      run_target() {
+        LABEL="$1"
+        shift
 
-    # Run the container targeting Delft, checking if it outputs the temperature.
-    - echo "Running container for Delft..."
-    - CONTAINER_ID=$(docker run --net=host -d -e PYTHONUNBUFFERED=1 "$IMAGE_TAG")
-    - 'echo "Container ID: $CONTAINER_ID"'
-    - EXIT_CODE=$(docker wait "$CONTAINER_ID")
-    - docker logs "$CONTAINER_ID"
-    - docker rm "$CONTAINER_ID" || true
-    - '[ "$EXIT_CODE" -eq 0 ] || (echo "Delft container failed with exit code $EXIT_CODE" && exit "$EXIT_CODE")'
+        echo "Running container for ${LABEL}..."
+        CONTAINER_ID=$(docker run --net=host -d -e PYTHONUNBUFFERED=1 "$IMAGE_TAG" "$@")
+        echo "Container ID: ${CONTAINER_ID}"
 
-    # Run the container targeting Saratoga, checking if it outputs the temperature.
-    - echo "Running container for Saratoga..."
-    - CONTAINER_ID=$(docker run --net=host -d -e PYTHONUNBUFFERED=1 "$IMAGE_TAG" --saratoga)
-    - 'echo "Container ID: $CONTAINER_ID"'
-    - EXIT_CODE=$(docker wait "$CONTAINER_ID")
-    - docker logs "$CONTAINER_ID"
-    - docker rm "$CONTAINER_ID" || true
-    - '[ "$EXIT_CODE" -eq 0 ] || (echo "Saratoga container failed with exit code $EXIT_CODE" && exit "$EXIT_CODE")'
+        # wait for the container to finish
+        EXIT_CODE=$(docker wait "${CONTAINER_ID}")
+
+        # capture the logs (the temparature output)
+        LOG_OUTPUT=$(docker logs "${CONTAINER_ID}" 2>&1)
+        echo "**************************************************"
+        printf '%s\n' "${LOG_OUTPUT}"
+        echo "**************************************************"
+
+        # remove the container
+        docker rm "${CONTAINER_ID}" || true
+
+        if [ "${EXIT_CODE}" -ne 0 ]; then
+          echo "${LABEL} container failed with exit code ${EXIT_CODE}"
+          exit "${EXIT_CODE}"
+        fi
+      }
+      
+      # build the docker image
+      echo "Building image from dockerfile..."
+      docker build -f Dockerfile -t "$IMAGE_TAG" .
+
+      # run the container for each target
+      run_target "Delft"
+      run_target "Saratoga" --saratoga
   rules:
     - if: $CI_COMMIT_BRANCH
       exists:
