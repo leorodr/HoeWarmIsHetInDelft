@@ -8,7 +8,7 @@ class TARGETS(Enum):
     CURTISZ = "https://curtiszmweather.com/clientraw.txt"
     VENHUIZER = "https://www.venhuizerweer.nl/data/clientraw.txt"
 
-def fetch_clientraw(target: TARGETS) -> str:
+def fetch_clientraw(target: TARGETS, timeout: int = 15) -> str:
     unixtime = int(time.time() * 1000)
     target_url = (
         f"{target.value}?{unixtime}"
@@ -18,7 +18,7 @@ def fetch_clientraw(target: TARGETS) -> str:
         req = urllib.request.Request(
             target_url, headers={"User-Agent": "Mozilla/5.0"}
         )
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
             if response.status != 200:
                 raise RuntimeError(
                     f"Failed to fetch data from {target.value}. "
