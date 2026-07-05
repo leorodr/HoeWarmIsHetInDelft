@@ -28,7 +28,7 @@ docker_build_and_run:
   image: docker:24.0.7-cli
   services:
     - name: docker:24.0.7-dind
-      command: ["--tls=false"]
+      command: ["--tls=false", "--mtu=1400"]
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
@@ -40,7 +40,7 @@ docker_build_and_run:
 
     # Run the container targeting Delft, checking if it outputs the temperature.
     - echo "Running container for Delft..."
-    - CONTAINER_ID=$(docker run -d -e PYTHONUNBUFFERED=1 "$IMAGE_TAG")
+    - CONTAINER_ID=$(docker run --net=host -d -e PYTHONUNBUFFERED=1 "$IMAGE_TAG")
     - 'echo "Container ID: $CONTAINER_ID"'
     - EXIT_CODE=$(docker wait "$CONTAINER_ID")
     - docker logs "$CONTAINER_ID"
@@ -49,7 +49,7 @@ docker_build_and_run:
 
     # Run the container targeting Saratoga, checking if it outputs the temperature.
     - echo "Running container for Saratoga..."
-    - CONTAINER_ID=$(docker run -d -e PYTHONUNBUFFERED=1 "$IMAGE_TAG" --saratoga)
+    - CONTAINER_ID=$(docker run --net=host -d -e PYTHONUNBUFFERED=1 "$IMAGE_TAG" --saratoga)
     - 'echo "Container ID: $CONTAINER_ID"'
     - EXIT_CODE=$(docker wait "$CONTAINER_ID")
     - docker logs "$CONTAINER_ID"
