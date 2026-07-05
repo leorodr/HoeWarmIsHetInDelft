@@ -38,9 +38,9 @@ docker_build_and_run:
     - echo "Building image from dockerfile..."
     - docker build -f Dockerfile -t "$IMAGE_TAG" .
     - echo "Running container for Delft..."
-    - docker run --rm "$IMAGE_TAG"
+    - docker run -d --rm "$IMAGE_TAG"
     - echo "Running container for Saratoga..."
-    - docker run --rm "$IMAGE_TAG" --saratoga
+    - docker run -d --rm "$IMAGE_TAG" --saratoga
   rules:
     - if: $CI_COMMIT_BRANCH
       exists:
